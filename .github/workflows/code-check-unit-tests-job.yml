@@ -1,0 +1,21 @@
+name: Code_check_unit_tests
+
+on:
+  pull_request:
+    types:
+      - opened
+    branches:    
+      - main
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@main
+    - name: Install Pytest
+      run: |
+        python -m pip install -r requirements.txt
+    - name: Run Unit tests
+      run: |
+        pytest tests/

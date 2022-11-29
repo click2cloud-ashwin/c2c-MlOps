@@ -1,0 +1,42 @@
+name: Manually trigger an Azure Machine Learning job
+
+on:
+  workflow_dispatch:
+    inputs:
+    #   AZURE_ACCOUNT_ID:
+    #     description: 'Azure Account Mail ID'
+    #     type: string
+    #     required: true
+    #   subscriptionID:
+    #     description: 'Azure Subscription ID'
+    #     type: string
+    #     required: true
+      resource_group: 
+        description: 'Azure Resource Group'
+        type: string
+        required: true
+      aml_workspace:
+        description: 'Azure Machine Learning Workspace'
+        type: string
+        required: true
+
+# env:
+#   AZURE_PASSWORD: ''
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@main
+    - name: Install az ml extension
+      run: az extension add -n ml -y
+    - name: Azure login
+      # run: az login -u ${{ github.event.inputs.resource_group }}  -p $AZURE_PASSWORD
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    # - name: Set Azure Subscription
+      # run: az account set --subscription ${{ github.event.inputs.subscriptionID }}
+    - name: Run Pipeline Job
+      run: az ml job create --file ./src/job.yml --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
