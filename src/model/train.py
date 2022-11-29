@@ -28,7 +28,7 @@ def main(args):
     train_model(args.reg_rate, X_train, X_test, y_train, y_test)
     
     # return job run ID
-    run: print(run.info.run_id)
+    print(run.info.run_id)
 
 
 def get_csvs_df(path):
