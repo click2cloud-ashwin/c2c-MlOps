@@ -41,7 +41,7 @@ jobs:
     - name: Run Pipeline Job
       run: | 
         az ml job create --file ./src/job.yml --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
-        sleep
+        sleep 120
     - name: Get the Job Name/run ID
       run: |
         JOB_NAME=$(az ml job list --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "[0].name" | tr -d '"')
