@@ -1,0 +1,82 @@
+name: Create AML Infrastructure and Assets on Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      AZURE_ACCOUNT_ID:
+        description: 'Azure Account Mail ID'
+        type: string
+        required: true
+      Subscription_ID:
+        description: 'Azure Subscription ID'
+        type: string
+        required: true
+      Resource_Group: 
+        description: 'Azure Resource Group'
+        type: string
+        required: true
+      Resource_Group_Location: 
+        description: 'Azure Resource Group Location'
+        required: true
+        type: choice
+        options:
+        - eastus
+        - eastus2
+        - centralus
+        - westeurope
+        - westus2
+        - eastasia 
+      AML_Workspace:
+        description: 'Unique AML Workspace Name'
+        type: string
+        required: true
+      AML_Compute_Instance_Name:
+        description: 'AML Compute Instance Name'
+        type: string
+        required: true
+      AML_Compute_Instance_Size:
+        description: 'AML Compute Instance Size'
+        required: true
+        type: choice
+        options:
+          - Standard_DS11_v2
+          - Standard_DS3_v2
+          - Standard_DS12_v2
+          - Standard_F4S_v2
+      AML_Data_Asset_Name:
+        description: 'DataSet Name'
+        type: string
+        required: true
+
+env:
+  AZURE_PASSWORD: 'psudo$1998'
+
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@main
+    - name: Install az ml extension
+      run: az extension add -n ml -y
+    - name: Azure Login
+    # uses: azure/login@v1
+      # with:
+      #   creds: ${{secrets.AZURE_CREDENTIALS}}
+      run: | 
+        az login -u ${{ github.event.inputs.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
+        az account set --subscription ${{ github.event.inputs.subscriptionID }}
+    - name: Create Resource Group
+      run: | 
+        az group create --name ${{ github.event.inputs.Resource_Group }} --location ${{ github.event.inputs.Resource_Group_Location }}
+    - name: Create AML Workspace
+      run: |
+        az ml workspace create --workspace-name ${{ github.event.inputs.AML_Workspace }} --resource-group ${{ github.event.inputs.Resource_Group }}
+    - name: Create AML Compute Instance
+      run: |
+        az ml compute create --name ${{ github.event.inputs.AML_Compute_Instance_Name }} --type computeinstance --size ${{ github.event.inputs.AML_Compute_Instance_Size }} --resource-group ${{ github.event.inputs.Resource_Group }} --workspace-name --resource-group ${{ github.event.inputs.AML_Workspace }}
+        sleep 240
+    - name: Create AML Data AML_Data_Asset_Name
+      run: |
+        az ml data create --name ${{ github.event.inputs.AML_Data_Asset_Name }} --version 1 --path ./production/data/  --resource-group ${{ github.event.inputs.Resource_Group }} --workspace-name ${{ github.event.inputs.AML_Workspace }}

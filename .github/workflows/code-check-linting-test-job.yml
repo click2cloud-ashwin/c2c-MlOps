@@ -9,7 +9,7 @@ on:
 
 
 jobs:
-  job1:
+  linting_test:
     name: linting
     runs-on: ubuntu-latest
     steps:

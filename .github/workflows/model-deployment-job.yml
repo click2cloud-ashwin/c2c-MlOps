@@ -1,4 +1,4 @@
-name: Manually trigger an Azure Machine Learning job
+name: MLflow Model Deployment
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ env:
   AZURE_PASSWORD: 'psudo$1998'
 
 jobs:
-  train:
+  deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repo
@@ -38,15 +38,9 @@ jobs:
       run: | 
         az login -u ${{ github.event.inputs.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
         az account set --subscription ${{ github.event.inputs.subscriptionID }}
-    - name: Run Pipeline Job
+    - name: Create MLflow Endpoint
       run: | 
-        az ml job create --file ./src/job.yml --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
-        sleep 300
-    - name: Get the Job Name/run ID
+        az ml online-endpoint create --file ./model-deployment/create-endpoint.yml --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
+    - name: Create MLflow Model Deployment
       run: |
-        JOB_NAME=$(az ml job list --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "[0].name" | tr -d '"')
-    - name: Register the Model in Registry
-      run: |
-        az ml model create --name "diabetes-predict-mlflow-model" \
-                   --type "mlflow_model" \
-                   --path "azureml://jobs/$JOB_NAME/outputs/artifacts/model"
+        az ml online-deployment create --file ./model-deployment/mlflow-deployment.yml --endpoint diabetes-predict-mlflow-endpoint --all-traffic --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}  
