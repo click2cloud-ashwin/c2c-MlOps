@@ -43,7 +43,7 @@ jobs:
         az ml job create --file ./src/job.yml --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
     - name: Get the Job Name/run ID
       run: |
-        RUN_ID = $(az ml job list --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "[0].name" | tr -d '"')
+        RUN_ID=$(az ml job list --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "[0].name" | tr -d '"')
     - name: Register the Model in Registry
       run: |
         az ml model create --name "diabetes-predict-mlflow-model" --type "mlflow_model" --path runs:/$RUN_ID/model  \
