@@ -41,12 +41,12 @@ jobs:
     - name: Run Pipeline Job
       run: | 
         az ml job create --file ./src/job.yml --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
-        sleep 300
+        sleep
     - name: Get the Job Name/run ID
       run: |
         JOB_NAME=$(az ml job list --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "[0].name" | tr -d '"')
     - name: Register the Model in Registry
       run: |
-        az ml model create --name "diabetes-predict-mlflow-model" \
-                   --type "mlflow_model" \
-                   --path "azureml://jobs/$JOB_NAME/outputs/artifacts/model"
+        az ml model create --name "diabetes-predict-mlflow-model" --type "mlflow_model" \
+                   --path "azureml://jobs/$JOB_NAME/outputs/artifacts/model" \
+                   --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
