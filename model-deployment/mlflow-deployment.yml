@@ -2,5 +2,5 @@ $schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.sch
 name: diabetes-mlflow-deployment
 endpoint_name: diabetes-predict-mlflow-endpoint
 model: azureml:diabetes-predict-mlflow-model@latest
-instance_type: Standard_F4s_v2
+instance_type: Standard_DS2_v2
 instance_count: 1
