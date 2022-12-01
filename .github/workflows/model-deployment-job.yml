@@ -2,6 +2,9 @@ name: MLflow Model Deployment
 
 on:
   workflow_dispatch:
+    # workflows: ["Manually trigger an Azure Machine Learning job"]
+    # types: [completed]
+    # branches: [main]
     inputs:
       AZURE_ACCOUNT_ID:
         description: 'Azure Account Mail ID'
@@ -19,13 +22,23 @@ on:
         description: 'Azure Machine Learning Workspace'
         type: string
         required: true
+      model_endpoint:
+        description: 'AML Endpoint Name'
+        type: string
+        required: true
+      model_deployment:
+        description: 'AML Deployment Name'
+        type: string
+        required: true
+
 
 env:
   AZURE_PASSWORD: 'psudo$1998'
 
 jobs:
-  deploy:
+  on-success:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: Check out repo
       uses: actions/checkout@main
@@ -40,7 +53,22 @@ jobs:
         az account set --subscription ${{ github.event.inputs.subscriptionID }}
     - name: Create MLflow Endpoint
       run: | 
-        az ml online-endpoint create --file ./model-deployment/create-endpoint.yml --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
+        Random_ID=$(( $RANDOM * 5 ))
+        Model_Endpoint_Name=${{ github.event.inputs.model_endpoint }}-${ Random_ID }
+        CHECK_ENDPOINT=$(az ml online-endpoint show --name ${ Model_Endpoint_Name } --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "{Name:name}"  --output tsv) 
+        if [[ -n "${ CHECK_ENDPOINT }" ]]; then
+            echo "Endpoint with the name ${ Model_Endpoint_Name } already exist. Create Deployment"
+        else
+            echo "Creating Endpoint"
+            az ml online-endpoint create --name ${{ github.event.inputs.model_endpoint }} --auth-mode key --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
+        fi 
     - name: Create MLflow Model Deployment
       run: |
-        az ml online-deployment create --file ./model-deployment/mlflow-deployment.yml --endpoint diabetes-predict-mlflow-endpoint --all-traffic --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}  
+        Rand_ID=$(( $RANDOM * 7 ))
+        Model_Deployment_Name=${{ github.event.inputs.model_deployment }}-${ Random_ID }
+        az ml online-deployment create --name "${ Model_Deployment_Name }" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ github.event.inputs.model_endpoint }} --all-traffic --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
+  # on-failure:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+  #   steps:
+  #     - run: echo 'The triggering workflow AML Model Training was failed. The triggering workflow must be run successfully to run this workflow.'
