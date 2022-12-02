@@ -1,10 +1,10 @@
 name: MLflow Model Deployment Workflow
 
 on:
-  workflow_run:
-    workflows: ["AML Model Training Workflow"]
-    types: [completed]
-    branches: [main]
+  workflow_dispatch:
+    # workflows: ["AML Model Training Workflow"]
+    # types: [completed]
+    # branches: [main]
 
 env:
   AZURE_PASSWORD: 'psudo$1998'
@@ -14,7 +14,7 @@ jobs:
   on-success:
     name: Model Deployment
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: Check out repo
       uses: actions/checkout@main
@@ -28,9 +28,9 @@ jobs:
         az login -u ${{ secrets.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
         az account set --subscription ${{ secrets.Subscription_ID }}
     - name: Create MLflow Endpoint
-      run: | 
-        CHECK_ENDPOINT=$(az ml online-endpoint show --name ${{ secrets.Model_Endpoint }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} --query "{Name:name}"  --output tsv) 
-        if [[ -n "${{ CHECK_ENDPOINT }}" ]]; then
+      run: |
+        Check_Endpoint=$(az ml online-endpoint show --name ${{ secrets.Model_Endpoint }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} --query "{Name:name}"  --output tsv)
+        if [[ -n "${Check_Endpoint}" ]]; then
             echo "Endpoint with the name ${{ secrets.Model_Endpoint }} already exist. Proceed to create Deployment"
         else
             echo "Creating Endpoint"
@@ -41,8 +41,8 @@ jobs:
         Random_ID=$(( $RANDOM * 4 ))
         Model_Deployment_Name=${{ secrets.Model_Deployment }}-${{ Random_ID }}
         az ml online-deployment create --name "${{ Model_Deployment_Name }}" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ secrets.Model_Endpoint }} --all-traffic --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
-  on-failure:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    steps:
-      - run: echo 'The triggering workflow AML Model Training was failed. The triggering workflow must be run successfully to run this workflow.'
+  # on-failure:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+  #   steps:
+  #     - run: echo 'The triggering workflow AML Model Training was failed. The triggering workflow must be run successfully to run this workflow.'
