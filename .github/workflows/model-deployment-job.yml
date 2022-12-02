@@ -39,7 +39,7 @@ jobs:
     - name: Create MLflow Model Deployment
       run: |
         Random_Id=$(( $RANDOM * 4 ))
-        Model_Deployment_Name="${{ secrets.Model_Deployment }}-${Random_Id}-deployment"
+        Model_Deployment_Name="${{ secrets.Model_Deployment }}${Random_Id}-svc"
         az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ secrets.Model_Endpoint }} --all-traffic --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
   on-failure:
     runs-on: ubuntu-latest
