@@ -1,10 +1,10 @@
 name: MLflow Model Deployment
 
 on:
-  workflow_dispatch:
-    # workflows: ["Manually trigger an Azure Machine Learning job"]
-    # types: [completed]
-    # branches: [main]
+  workflow_run:
+    workflows: ["Manually trigger an Azure Machine Learning job"]
+    types: [completed]
+    branches: [main]
     inputs:
       AZURE_ACCOUNT_ID:
         description: 'Azure Account Mail ID'
@@ -65,8 +65,8 @@ jobs:
         Rand_ID=$(( $RANDOM * 4 ))
         Model_Deployment_Name=${{ github.event.inputs.model_deployment }}-${ Random_ID }
         az ml online-deployment create --name "${ Model_Deployment_Name }" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ github.event.inputs.model_endpoint }} --all-traffic --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
-  # on-failure:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-  #   steps:
-  #     - run: echo 'The triggering workflow AML Model Training was failed. The triggering workflow must be run successfully to run this workflow.'
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'The triggering workflow AML Model Training was failed. The triggering workflow must be run successfully to run this workflow.'
