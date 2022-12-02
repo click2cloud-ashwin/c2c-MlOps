@@ -64,7 +64,7 @@ The output of the service principal which you need to paste into the <b>Value</b
 {
 "clientId": "your-client-id",
 "clientSecret": "your-client-secret",
-"subscriptionId": "your-subscription-id",
+"Subscription_ID": "your-subscription-id",
 "tenantId": "your-tenant-id",
 "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
 "resourceManagerEndpointUrl": "https://management.azure.com/",

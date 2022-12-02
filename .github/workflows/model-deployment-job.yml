@@ -1,42 +1,18 @@
-name: MLflow Model Deployment
+name: MLflow Model Deployment Workflow
 
 on:
   workflow_run:
-    workflows: ["Manually trigger an Azure Machine Learning job"]
+    workflows: ["AML Model Training Workflow"]
     types: [completed]
     branches: [main]
-    inputs:
-      AZURE_ACCOUNT_ID:
-        description: 'Azure Account Mail ID'
-        type: string
-        required: true
-      subscriptionID:
-        description: 'Azure Subscription ID'
-        type: string
-        required: true
-      resource_group: 
-        description: 'Azure Resource Group'
-        type: string
-        required: true
-      aml_workspace:
-        description: 'Azure Machine Learning Workspace'
-        type: string
-        required: true
-      model_endpoint:
-        description: 'AML Endpoint Name'
-        type: string
-        required: true
-      model_deployment:
-        description: 'AML Deployment Name'
-        type: string
-        required: true
-
 
 env:
   AZURE_PASSWORD: 'psudo$1998'
 
+
 jobs:
   on-success:
+    name: Model Deployment
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
@@ -49,22 +25,22 @@ jobs:
       # with:
       #   creds: ${{secrets.AZURE_CREDENTIALS}}
       run: | 
-        az login -u ${{ github.event.inputs.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
-        az account set --subscription ${{ github.event.inputs.subscriptionID }}
+        az login -u ${{ secrets.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
+        az account set --subscription ${{ secrets.Subscription_ID }}
     - name: Create MLflow Endpoint
       run: | 
-        CHECK_ENDPOINT=$(az ml online-endpoint show --name ${{ github.event.inputs.model_endpoint }} --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "{Name:name}"  --output tsv) 
+        CHECK_ENDPOINT=$(az ml online-endpoint show --name ${{ secrets.Model_Endpoint }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} --query "{Name:name}"  --output tsv) 
         if [[ -n "${ CHECK_ENDPOINT }" ]]; then
-            echo "Endpoint with the name ${{ github.event.inputs.model_endpoint }} already exist. Proceed to create Deployment"
+            echo "Endpoint with the name ${{ secrets.Model_Endpoint }} already exist. Proceed to create Deployment"
         else
             echo "Creating Endpoint"
-            az ml online-endpoint create --name ${{ github.event.inputs.model_endpoint }} --auth-mode key --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
+            az ml online-endpoint create --name ${{ secrets.Model_Endpoint }} --auth-mode key --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
         fi 
     - name: Create MLflow Model Deployment
       run: |
-        Rand_ID=$(( $RANDOM * 4 ))
-        Model_Deployment_Name=${{ github.event.inputs.model_deployment }}-${ Random_ID }
-        az ml online-deployment create --name "${ Model_Deployment_Name }" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ github.event.inputs.model_endpoint }} --all-traffic --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
+        Random_ID=$(( $RANDOM * 4 ))
+        Model_Deployment_Name=${{ secrets.Model_Deployment }}-${ Random_ID }
+        az ml online-deployment create --name "${ Model_Deployment_Name }" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ secrets.Model_Endpoint }} --all-traffic --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
