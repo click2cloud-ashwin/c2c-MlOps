@@ -30,7 +30,7 @@ jobs:
     - name: Create MLflow Endpoint
       run: | 
         CHECK_ENDPOINT=$(az ml online-endpoint show --name ${{ secrets.Model_Endpoint }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} --query "{Name:name}"  --output tsv) 
-        if [[ -n "${ CHECK_ENDPOINT }" ]]; then
+        if [[ -n "${{ CHECK_ENDPOINT }}" ]]; then
             echo "Endpoint with the name ${{ secrets.Model_Endpoint }} already exist. Proceed to create Deployment"
         else
             echo "Creating Endpoint"
@@ -39,8 +39,8 @@ jobs:
     - name: Create MLflow Model Deployment
       run: |
         Random_ID=$(( $RANDOM * 4 ))
-        Model_Deployment_Name=${{ secrets.Model_Deployment }}-${ Random_ID }
-        az ml online-deployment create --name "${ Model_Deployment_Name }" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ secrets.Model_Endpoint }} --all-traffic --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
+        Model_Deployment_Name=${{ secrets.Model_Deployment }}-${{ Random_ID }}
+        az ml online-deployment create --name "${{ Model_Deployment_Name }}" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ secrets.Model_Endpoint }} --all-traffic --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
