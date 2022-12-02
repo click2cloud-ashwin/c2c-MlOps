@@ -36,7 +36,7 @@ jobs:
       run: |
         Random_Id=$(( $RANDOM ))
         Model_Deployment_Name="${{ secrets.MODEL_DEPLOYMENT }}-${Random_Id}-svc"
-        az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${{ secrets.MODEL_ENDPOINT }} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
+        az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${Model_Endpoint_Name} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
