@@ -38,9 +38,14 @@ jobs:
         fi 
     - name: Create MLflow Model Deployment
       run: |
-        Random_Id=$(( $RANDOM * 4 ))
-        Model_Deployment_Name="${{ secrets.Model_Deployment }}${Random_Id}-svc"
-        az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ secrets.Model_Endpoint }} --all-traffic --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
+        Check_Deployment=$(az ml online-deployment show --name "${{ secrets.MODEL_DEPLOYMENT }}" --endpoint-name ${{ secrets.Model_Endpoint }}  --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} --query "{Name:name}"  --output tsv)
+        if [[ -n "${Check_Deployment}" ]]; then
+            echo " Deleting Deployment: ${Check_Deployment}"
+            az ml online-deployment delete --name "${{ secrets.MODEL_DEPLOYMENT }}" --endpoint-name ${{ secrets.Model_Endpoint }} --yes  --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} 
+        else
+            echo "Creating Deployment"
+            az ml online-deployment create --name "${{ secrets.MODEL_DEPLOYMENT }}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${{ secrets.Model_Endpoint }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
+        fi
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
