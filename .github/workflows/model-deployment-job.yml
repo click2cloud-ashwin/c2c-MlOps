@@ -53,18 +53,16 @@ jobs:
         az account set --subscription ${{ github.event.inputs.subscriptionID }}
     - name: Create MLflow Endpoint
       run: | 
-        Random_ID=$(( $RANDOM * 5 ))
-        Model_Endpoint_Name=${{ github.event.inputs.model_endpoint }}-${ Random_ID }
-        CHECK_ENDPOINT=$(az ml online-endpoint show --name ${ Model_Endpoint_Name } --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "{Name:name}"  --output tsv) 
+        CHECK_ENDPOINT=$(az ml online-endpoint show --name ${{ github.event.inputs.model_endpoint }} --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }} --query "{Name:name}"  --output tsv) 
         if [[ -n "${ CHECK_ENDPOINT }" ]]; then
-            echo "Endpoint with the name ${ Model_Endpoint_Name } already exist. Create Deployment"
+            echo "Endpoint with the name ${{ github.event.inputs.model_endpoint }} already exist. Proceed to create Deployment"
         else
             echo "Creating Endpoint"
             az ml online-endpoint create --name ${{ github.event.inputs.model_endpoint }} --auth-mode key --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
         fi 
     - name: Create MLflow Model Deployment
       run: |
-        Rand_ID=$(( $RANDOM * 7 ))
+        Rand_ID=$(( $RANDOM * 4 ))
         Model_Deployment_Name=${{ github.event.inputs.model_deployment }}-${ Random_ID }
         az ml online-deployment create --name "${ Model_Deployment_Name }" --file ./model-deployment/mlflow-deployment.yml --endpoint ${{ github.event.inputs.model_endpoint }} --all-traffic --resource-group ${{ github.event.inputs.resource_group }} --workspace-name ${{ github.event.inputs.aml_workspace }}
   # on-failure:
