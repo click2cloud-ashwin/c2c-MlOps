@@ -53,14 +53,14 @@ jobs:
         az account set --subscription ${{ secrets.Subscription_ID }}
     - name: Create Resource Group
       run: | 
-        az group create --name ${{ secrets.Resource_Group }} --location ${{ github.event.inputs.Resource_Group_Location }}
+        az group create --name ${{ secrets.RESOURCE_GROUP }} --location ${{ github.event.inputs.Resource_Group_Location }}
     - name: Create AML Workspace
       run: |
-        az ml workspace create --workspace-name ${{ secrets.AML_Workspace }} --resource-group ${{ secrets.Resource_Group }}
+        az ml workspace create --workspace-name ${{ secrets.AML_WORKSPACE }} --resource-group ${{ secrets.RESOURCE_GROUP }}
     - name: Create AML Compute Instance
       run: |
-        az ml compute create --name ${{ github.event.inputs.AML_Compute_Instance_Name }} --type computeinstance --size ${{ github.event.inputs.AML_Compute_Instance_Size }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
+        az ml compute create --name ${{ github.event.inputs.AML_Compute_Instance_Name }} --type computeinstance --size ${{ github.event.inputs.AML_Compute_Instance_Size }} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
         sleep 240
     - name: Create AML Data Set
       run: |
-        az ml data create --name ${{ github.event.inputs.AML_Data_Asset_Name }} --version 1 --path ./production/data/  --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
+        az ml data create --name ${{ github.event.inputs.AML_Data_Asset_Name }} --version 1 --path ./production/data/  --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
