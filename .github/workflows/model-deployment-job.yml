@@ -27,16 +27,15 @@ jobs:
       run: | 
         az login -u ${{ secrets.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
         az account set --subscription ${{ secrets.SUBSCRIPTION_ID }}
-    - name: Create MLflow Endpoint
-      run: |
-        Random_Num=$(( $RANDOM ))
-        Model_Endpoint_Name="${{ secrets.MODEL_ENDPOINT }}-${Random_Num}"
-        az ml online-endpoint create --name ${Model_Endpoint_Name} --auth-mode key --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }} 
-    - name: Create MLflow Model Deployment
+    - name: Create MLflow Endpoint and Deployment
       run: |
         Random_Id=$(( $RANDOM ))
+        Model_Endpoint_Name="${{ secrets.MODEL_ENDPOINT }}-${Random_Id}"
+        echo "Creating MLFlow Endpoint"
+        az ml online-endpoint create --name ${Model_Endpoint_Name} --auth-mode key --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
+        echo "Creating MLFlow Deployment"
         Model_Deployment_Name="${{ secrets.MODEL_DEPLOYMENT }}-${Random_Id}-svc"
-        az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${Model_Endpoint_Name} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
+        az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${Model_Endpoint_Name} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}       
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
