@@ -26,26 +26,17 @@ jobs:
       #   creds: ${{secrets.AZURE_CREDENTIALS}}
       run: | 
         az login -u ${{ secrets.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
-        az account set --subscription ${{ secrets.Subscription_ID }}
+        az account set --subscription ${{ secrets.SUBSCRIPTION_ID }}
     - name: Create MLflow Endpoint
       run: |
-        Check_Endpoint=$(az ml online-endpoint show --name ${{ secrets.Model_Endpoint }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} --query "{Name:name}"  --output tsv)
-        if [[ -n "${Check_Endpoint}" ]]; then
-            echo "Endpoint with the name ${{ secrets.Model_Endpoint }} already exist. Proceed to create Deployment"
-        else
-            echo "Creating Endpoint"
-            az ml online-endpoint create --name ${{ secrets.Model_Endpoint }} --auth-mode key --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
-        fi 
+        Random_Num=$(( $RANDOM ))
+        Model_Endpoint_Name="${{ secrets.MODEL_ENDPOINT }}-${Random_Num}"
+        az ml online-endpoint create --name ${Model_Endpoint_Name} --auth-mode key --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }} 
     - name: Create MLflow Model Deployment
       run: |
-        Check_Deployment=$(az ml online-deployment show --name "${{ secrets.MODEL_DEPLOYMENT }}" --endpoint-name ${{ secrets.Model_Endpoint }}  --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} --query "{Name:name}"  --output tsv)
-        if [[ -n "${Check_Deployment}" ]]; then
-            echo " Deleting Deployment: ${Check_Deployment}"
-            az ml online-deployment delete --name "${{ secrets.MODEL_DEPLOYMENT }}" --endpoint-name ${{ secrets.Model_Endpoint }} --yes  --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }} 
-        else
-            echo "Creating Deployment"
-            az ml online-deployment create --name "${{ secrets.MODEL_DEPLOYMENT }}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${{ secrets.Model_Endpoint }} --resource-group ${{ secrets.Resource_Group }} --workspace-name ${{ secrets.AML_Workspace }}
-        fi
+        Random_Id=$(( $RANDOM ))
+        Model_Deployment_Name="${{ secrets.MODEL_DEPLOYMENT }}-${Random_Id}-svc"
+        az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${{ secrets.MODEL_ENDPOINT }} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
