@@ -25,7 +25,7 @@ jobs:
       # with:
       #   creds: ${{secrets.AZURE_CREDENTIALS}}
       run: | 
-        az login -u ${{ secrets.AZURE_ACCOUNT_ID }}  -p $AZURE_PASSWORD
+        az login -u ${{ secrets.AZURE_ACCOUNT_ID }}  -p ${{ secrets.AZURE_PASSWORD }}
         az account set --subscription ${{ secrets.SUBSCRIPTION_ID }}
     - name: Create MLflow Endpoint and Deployment
       run: |
