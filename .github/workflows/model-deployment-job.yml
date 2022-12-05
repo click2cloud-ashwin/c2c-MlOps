@@ -6,9 +6,6 @@ on:
     types: [completed]
     branches: [main]
 
-env:
-  AZURE_PASSWORD: 'psudo$1998'
-
 
 jobs:
   on-success:
