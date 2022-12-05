@@ -32,9 +32,6 @@ on:
         type: string
         required: true
 
-env:
-  AZURE_PASSWORD: 'psudo$1998'
-
 
 jobs:
   train:
