@@ -24,15 +24,39 @@ jobs:
       run: | 
         az login -u ${{ secrets.AZURE_ACCOUNT_ID }}  -p ${{ secrets.AZURE_PASSWORD }}
         az account set --subscription ${{ secrets.SUBSCRIPTION_ID }}
-    - name: Create MLflow Endpoint and Deployment
+    - name: Create MLflow Endpoint
       run: |
-        Random_Id=$(( $RANDOM ))
-        Model_Endpoint_Name="${{ secrets.MODEL_ENDPOINT }}-${Random_Id}"
-        echo "Creating MLFlow Endpoint"
-        az ml online-endpoint create --name ${Model_Endpoint_Name} --auth-mode key --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
-        echo "Creating MLFlow Deployment"
-        Model_Deployment_Name="${{ secrets.MODEL_DEPLOYMENT }}-${Random_Id}-svc"
-        az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${Model_Endpoint_Name} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}       
+        echo "Getting MLFlow Endpoint list"
+        Check_Endpoint=$(az ml online-endpoint list  --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }} --query "[].name"  -o tsv)
+        echo "${Check_Endpoint}"
+        for i in ${Check_Endpoint};
+          do
+            if [[  "Check_Endpoint[i]"==${{ secrets.MODEL_ENDPOINT }} ]]; then
+              echo "Endpoint ${{ secrets.MODEL_ENDPOINT }} already exists";
+              break
+            else;
+              echo "Creating  MLFlow Endpoint"
+              az ml online-endpoint create --name ${{ secrets.MODEL_ENDPOINT }} --auth-mode key --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
+              break
+            fi;
+          done
+    - name: Create MLFlow Deployment
+      run: |
+        echo "Getting MLFlow Deployment list"
+        Check_Deployment=$(az ml online-deployment list --endpoint-name ${{ secrets.MODEL_ENDPOINT }} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }} --query "[].name"  -o tsv)
+        echo "${Check_Deployment}"
+        for i in ${Check_Deployment};
+          do
+            if [[  "Check_Deployment[i]"==${{ secrets.MODEL_DEPLOYMENT }} ]]; then
+              echo "Deployment already exists. Deleting Deployment: ${{ secrets.MODEL_DEPLOYMENT }}"
+              az ml online-deployment delete --name ${{ secrets.MODEL_DEPLOYMENT }} --endpoint-name ${{ secrets.MODEL_ENDPOINT }} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
+              break
+            else
+              echo "Creating  MLFlow Deployment"
+              az ml online-deployment create --name "${Model_Deployment_Name}" --file ./model-deployment/mlflow-deployment.yml --endpoint-name ${Model_Endpoint_Name} --resource-group ${{ secrets.RESOURCE_GROUP }} --workspace-name ${{ secrets.AML_WORKSPACE }}
+              break
+            fi;
+          done
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
